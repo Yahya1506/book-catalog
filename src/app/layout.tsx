@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "react-hot-toast";
-import { SessionProvider } from "next-auth/react";
+import Providers from "@/components/Providers";
+import Header from "@/components/Header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,21 +16,21 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Book Catalog",
-  description: "A book catalog app",
+  description: "A Next.js book catalog app",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <SessionProvider>
-          {children}
-          <Toaster position="top-right" reverseOrder={false} />
-        </SessionProvider>
+        <Providers>
+          <Header />
+          <main className="p-6">{children}</main>
+        </Providers>
       </body>
     </html>
   );

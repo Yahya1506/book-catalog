@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import Link from "next/link"
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import UserMenu from "components/Usermenu"
 
 type Book = {
   id: number;
@@ -14,6 +16,7 @@ type Book = {
 export default function HomePage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
+  const { data: session } = useSession(); // session info
 
   // Fetch books from API
   const fetchBooks = async () => {
@@ -44,6 +47,8 @@ export default function HomePage() {
       if (res.ok) {
         setBooks((prevBooks) => prevBooks.filter((book) => book.id !== id));
         toast.success("Book deleted successfully!");
+      } else if (res.status === 401) {
+        toast.error("You must be logged in to delete books.");
       } else {
         toast.error("Failed to delete the book.");
       }
@@ -57,13 +62,19 @@ export default function HomePage() {
 
   return (
     <main className="p-6">
+     
       <h1 className="text-2xl font-bold mb-4">Book Catalog</h1>
-      <Link
-        href="/add"
-        className="inline-block mb-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-      >
-        Add New Book
-      </Link>
+
+      {/* Only show Add New Book if logged in */}
+      {session && (
+        <Link
+          href="/add"
+          className="inline-block mb-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+        >
+          Add New Book
+        </Link>
+      )}
+
       {books.length === 0 ? (
         <p>No books available.</p>
       ) : (
@@ -74,7 +85,7 @@ export default function HomePage() {
               <th className="border p-2">Title</th>
               <th className="border p-2">Author</th>
               <th className="border p-2">Genre</th>
-              <th className="border p-2">Actions</th>
+              {session && <th className="border p-2">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -84,14 +95,16 @@ export default function HomePage() {
                 <td className="border p-2">{book.title}</td>
                 <td className="border p-2">{book.author}</td>
                 <td className="border p-2">{book.genre}</td>
-                <td className="border p-2 text-center">
-                  <button
-                    onClick={() => handleDelete(book.id)}
-                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
-                </td>
+                {session && (
+                  <td className="border p-2 text-center">
+                    <button
+                      onClick={() => handleDelete(book.id)}
+                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

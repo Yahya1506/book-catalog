@@ -1,14 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { useSession } from "next-auth/react";
 
 export default function AddBookPage() {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [genre, setGenre] = useState("");
   const router = useRouter();
+  const { data: session, status } = useSession();
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      toast.error("You must be logged in to add a book.");
+      router.push("/auth/signin");
+    }
+  }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +37,10 @@ export default function AddBookPage() {
 
       if (res.ok) {
         toast.success("Book added successfully!");
-        router.push("/"); // Redirect to home
+        router.push("/");
+      } else if (res.status === 401) {
+        toast.error("Unauthorized. Please log in.");
+        router.push("/auth/signin");
       } else {
         toast.error("Failed to add book");
       }
@@ -36,6 +49,10 @@ export default function AddBookPage() {
       toast.error("An error occurred while adding the book");
     }
   };
+
+  if (status === "loading") {
+    return <p className="p-6">Checking authentication...</p>;
+  }
 
   return (
     <main className="p-6">
